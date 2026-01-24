@@ -1,0 +1,29 @@
+# --- Go ---
+/bin/
+*.exe
+*.test
+*.out
+main
+
+# Vendor directory
+vendor/
+
+# --- Python (Simulation scripts) ---
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# --- IDE & OS ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+redis_data/
+
+# --- Protocol Buffers ---
+# We generally COMMIT generated code (gen/) so others can run the repo 
+# without installing the compiler. So we do NOT ignore gen/.

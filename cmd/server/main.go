@@ -1,9 +1,13 @@
 package main
 
 import (
+	"arena-matchmaker/gen/matchmaker"
 	"arena-matchmaker/pkg/queue"
 	"fmt"
 	"log"
+	"net"
+
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -15,8 +19,18 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	fmt.Println("✅ Successfully connected to Redis!")
+	fmt.Println("Successfully connected to Redis!")
 
-	// Keep the app running
-	// for now, we just exit successfully.
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	matchmaker.RegisterMatchmakerServiceServer(grpcServer, &GrpcServer{})
+
+	fmt.Println("gRPC Server listening on port 50051")
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
