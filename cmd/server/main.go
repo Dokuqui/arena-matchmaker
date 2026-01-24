@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"arena-matchmaker/pkg/queue"
