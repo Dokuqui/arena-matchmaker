@@ -13,11 +13,7 @@ import (
 func main() {
 	fmt.Println("Starting Arena Matchmaker...")
 
-	redisClient, err := queue.NewClient("localhost:6379")
-	if err != nil {
-		log.Fatalf("Could not initialize Redis: %v", err)
-	}
-	defer redisClient.Close()
+	qClient, _ := queue.NewClient("localhost:6379")
 
 	fmt.Println("Successfully connected to Redis!")
 
@@ -27,7 +23,9 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	matchmaker.RegisterMatchmakerServiceServer(grpcServer, &GrpcServer{})
+	matchmaker.RegisterMatchmakerServiceServer(grpcServer, &GrpcServer{
+		QueueClient: qClient,
+	})
 
 	fmt.Println("gRPC Server listening on port 50051")
 	if err := grpcServer.Serve(lis); err != nil {
