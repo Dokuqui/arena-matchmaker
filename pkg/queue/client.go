@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	rdb *redis.Client
+	RDB *redis.Client
 }
 
 func NewClient(addr string) (*Client, error) {
@@ -23,11 +23,11 @@ func NewClient(addr string) (*Client, error) {
 		return nil, fmt.Errorf("failed to connect to redis: %w", err)
 	}
 
-	return &Client{rdb: rdb}, nil
+	return &Client{RDB: rdb}, nil
 }
 
 func (c *Client) AddToQueue(ctx context.Context, playerID string, mmr int32) error {
-	err := c.rdb.ZAdd(ctx, "matchmaker_queue", redis.Z{
+	err := c.RDB.ZAdd(ctx, "matchmaker_queue", redis.Z{
 		Score:  float64(mmr),
 		Member: playerID,
 	}).Err()

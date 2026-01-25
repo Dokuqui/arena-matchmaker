@@ -13,7 +13,7 @@ type GrpcServer struct {
 }
 
 func (s *GrpcServer) FindMatch(ctx context.Context, req *matchmaker.FindMatchRequest) (*matchmaker.FindMatchResponse, error) {
-	fmt.Printf("📥 Received Match Request | Player: %s | MMR: %d\n", req.PlayerId, req.Mmr)
+	fmt.Printf("Received Match Request | Player: %s | MMR: %d\n", req.PlayerId, req.Mmr)
 
 	err := s.QueueClient.AddToQueue(ctx, req.PlayerId, req.Mmr)
 	if err != nil {

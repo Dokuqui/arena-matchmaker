@@ -2,7 +2,9 @@ package main
 
 import (
 	"arena-matchmaker/gen/matchmaker"
+	"arena-matchmaker/pkg/logic"
 	"arena-matchmaker/pkg/queue"
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -13,9 +15,16 @@ import (
 func main() {
 	fmt.Println("Starting Arena Matchmaker...")
 
-	qClient, _ := queue.NewClient("localhost:6379")
+	qClient, err := queue.NewClient("localhost:6379")
+	if err != nil {
+		log.Fatalf("Could not initialize Redis: %v", err)
+	}
+	defer qClient.RDB.Close()
+	fmt.Println("Connected to Redis")
 
-	fmt.Println("Successfully connected to Redis!")
+	mmLogic := logic.NewMatchmaker(qClient.RDB)
+
+	go mmLogic.Run(context.Background())
 
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
