@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	TickRate        = 1 * time.Second
-	PlayersPerMatch = 2
-	MaxMMRDiff      = 200
+	TickRate      = 200 * time.Millisecond
+	PlayersPerMatch = 2             
+	MaxMMRDiff    = 100
 )
 
 type Matchmaker struct {
