@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"arena-matchmaker/pkg/metrics"
 	"context"
 	"fmt"
 	"log"
@@ -43,6 +44,9 @@ func (m *Matchmaker) Run(ctx context.Context) {
 }
 
 func (m *Matchmaker) findMatch(ctx context.Context) {
+	count, _ := m.rdb.ZCard(ctx, "matchmaker_queue").Result()
+	metrics.PlayersInQueue.Set(float64(count))
+
 	players, err := m.rdb.ZRangeWithScores(ctx, "matchmaker_queue", 0, 1).Result()
 	if err != nil {
 		log.Printf("Error reading queue: %v", err)
@@ -74,6 +78,8 @@ func (m *Matchmaker) findMatch(ctx context.Context) {
 		log.Printf("Failed to remove players from queue: %v", err)
 		return
 	}
+
+	metrics.MatchesMade.Inc()
 
 	matchID := fmt.Sprintf("Match_%d", time.Now().Unix())
 	fmt.Printf("MATCH CREATED! [%s] vs [%s] (Diff: %.0f) -> ID: %s\n",

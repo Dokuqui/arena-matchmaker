@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
@@ -45,6 +47,14 @@ func main() {
 	matchmaker.RegisterMatchmakerServiceServer(grpcServer, &GrpcServer{
 		QueueClient: qClient,
 	})
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		fmt.Println("📊 Metrics listening on :2112")
+		if err := http.ListenAndServe(":2112", nil); err != nil {
+			log.Printf("Metrics server failed: %v", err)
+		}
+	}()
 
 	go func() {
 		fmt.Printf("🚀 gRPC Server listening on %s\n", cfg.GRPCPort)
