@@ -9,21 +9,24 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const (
-	TickRate      = 200 * time.Millisecond
-	PlayersPerMatch = 2             
-	MaxMMRDiff    = 100
-)
+const PlayersPerMatch = 2
 
 type Matchmaker struct {
-	rdb *redis.Client
+	rdb        *redis.Client
+	interval   time.Duration
+	maxMMRDiff int
 }
 
-func NewMatchmaker(rdb *redis.Client) *Matchmaker {
-	return &Matchmaker{rdb: rdb}
+func NewMatchmaker(rdb *redis.Client, interval time.Duration, maxDiff int) *Matchmaker {
+	return &Matchmaker{
+		rdb:        rdb,
+		interval:   interval,
+		maxMMRDiff: maxDiff,
+	}
 }
+
 func (m *Matchmaker) Run(ctx context.Context) {
-	ticker := time.NewTicker(TickRate)
+	ticker := time.NewTicker(m.interval)
 	defer ticker.Stop()
 
 	fmt.Println("Matchmaker Loop Started...")
@@ -58,9 +61,7 @@ func (m *Matchmaker) findMatch(ctx context.Context) {
 		mmrDiff = -mmrDiff
 	}
 
-	if mmrDiff > MaxMMRDiff {
-		// Optimization: In a real system, we might expand the search here.
-		// For now, we just wait for someone better to join.
+	if mmrDiff > float64(m.maxMMRDiff) {
 		return
 	}
 
