@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"google.golang.org/grpc"
 )
@@ -15,7 +16,13 @@ import (
 func main() {
 	fmt.Println("Starting Arena Matchmaker...")
 
-	qClient, err := queue.NewClient("localhost:6379")
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+	fmt.Printf("Connecting to Redis at: %s\n", redisAddr)
+
+	qClient, err := queue.NewClient(redisAddr)
 	if err != nil {
 		log.Fatalf("Could not initialize Redis: %v", err)
 	}
