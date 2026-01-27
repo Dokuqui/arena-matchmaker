@@ -27,3 +27,14 @@ Designed to handle high-throughput queuing using Redis Sorted Sets and Go concur
 
 * **Latency:** < 10ms per request under load.
 * **Algorithm:** Skill-based matching (MMR) with time-based expansion logic.
+
+## 📊 Observability
+The system includes a built-in Prometheus metrics exporter to track real-time performance.
+
+* **Metrics Port:** `:2112`
+* **Key Metrics:**
+  * `arena_queue_depth`: Real-time count of players waiting.
+  * `arena_matches_total`: Cumulative counter of matches formed.
+  * `arena_match_latency_seconds`: Histogram of wait times.
+
+![Metrics Dashboard](docs/metrics_demo.png)
