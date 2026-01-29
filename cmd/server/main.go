@@ -50,14 +50,14 @@ func main() {
 
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		fmt.Println("📊 Metrics listening on :2112")
+		fmt.Println("Metrics listening on :2112")
 		if err := http.ListenAndServe(":2112", nil); err != nil {
 			log.Printf("Metrics server failed: %v", err)
 		}
 	}()
 
 	go func() {
-		fmt.Printf("🚀 gRPC Server listening on %s\n", cfg.GRPCPort)
+		fmt.Printf("gRPC Server listening on %s\n", cfg.GRPCPort)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}

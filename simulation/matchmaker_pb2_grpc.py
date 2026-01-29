@@ -40,6 +40,11 @@ class MatchmakerServiceStub(object):
                 request_serializer=matchmaker__pb2.FindMatchRequest.SerializeToString,
                 response_deserializer=matchmaker__pb2.FindMatchResponse.FromString,
                 _registered_method=True)
+        self.ReportResult = channel.unary_unary(
+                '/matchmaker.MatchmakerService/ReportResult',
+                request_serializer=matchmaker__pb2.ReportResultRequest.SerializeToString,
+                response_deserializer=matchmaker__pb2.ReportResultResponse.FromString,
+                _registered_method=True)
 
 
 class MatchmakerServiceServicer(object):
@@ -47,8 +52,13 @@ class MatchmakerServiceServicer(object):
     """
 
     def FindMatch(self, request, context):
-        """Player asks to find a match
-        """
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReportResult(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -60,6 +70,11 @@ def add_MatchmakerServiceServicer_to_server(servicer, server):
                     servicer.FindMatch,
                     request_deserializer=matchmaker__pb2.FindMatchRequest.FromString,
                     response_serializer=matchmaker__pb2.FindMatchResponse.SerializeToString,
+            ),
+            'ReportResult': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReportResult,
+                    request_deserializer=matchmaker__pb2.ReportResultRequest.FromString,
+                    response_serializer=matchmaker__pb2.ReportResultResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -90,6 +105,33 @@ class MatchmakerService(object):
             '/matchmaker.MatchmakerService/FindMatch',
             matchmaker__pb2.FindMatchRequest.SerializeToString,
             matchmaker__pb2.FindMatchResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReportResult(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/matchmaker.MatchmakerService/ReportResult',
+            matchmaker__pb2.ReportResultRequest.SerializeToString,
+            matchmaker__pb2.ReportResultResponse.FromString,
             options,
             channel_credentials,
             insecure,

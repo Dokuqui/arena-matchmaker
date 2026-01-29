@@ -37,3 +37,22 @@ func (c *Client) AddToQueue(ctx context.Context, playerID string, mmr int32) err
 	}
 	return nil
 }
+
+func (c *Client) GetPlayerMMR(ctx context.Context, playerID string) (int, error) {
+	val, err := c.RDB.HGet(ctx, "player_ratings", playerID).Int()
+	if err == redis.Nil {
+		return 1000, nil
+	}
+	if err != nil {
+		return 0, fmt.Errorf("failed to get mmr: %w", err)
+	}
+	return val, nil
+}
+
+func (c *Client) SetPlayerMMR(ctx context.Context, playerID string, mmr int) error {
+	err := c.RDB.HSet(ctx, "player_ratings", playerID, mmr).Err()
+	if err != nil {
+		return fmt.Errorf("failed to set mmr: %w", err)
+	}
+	return nil
+}
