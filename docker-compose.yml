@@ -1,10 +1,22 @@
 services:
-  app:
+  frontend:
     build: .
-    container_name: arena_server
+    container_name: arena_frontend
+    command: ./frontend
     ports:
       - "50051:50051"
       - "2112:2112"
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+    # deploy:         # UNCOMMENT THIS TO SHOW OFF SCALING
+    #   replicas: 2
+
+  matchmaker:
+    build: .
+    container_name: arena_worker
+    command: ./matchmaker
     environment:
       - REDIS_ADDR=redis:6379
     depends_on:
