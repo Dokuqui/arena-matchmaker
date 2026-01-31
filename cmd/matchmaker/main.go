@@ -1,6 +1,7 @@
 package main
 
 import (
+	"arena-matchmaker/pkg/allocator"
 	"arena-matchmaker/pkg/config"
 	"arena-matchmaker/pkg/logic"
 	"arena-matchmaker/pkg/queue"
@@ -24,7 +25,9 @@ func main() {
 	}
 	defer qClient.RDB.Close()
 
-	mmLogic := logic.NewMatchmaker(qClient.RDB, cfg.TickRate, cfg.MaxMMRDiff)
+	alloc := allocator.NewMockAllocator("EU-WEST-1")
+
+	mmLogic := logic.NewMatchmaker(qClient.RDB, cfg.TickRate, cfg.MaxMMRDiff, alloc)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go mmLogic.Run(ctx)

@@ -58,3 +58,6 @@ The system is split into independent services for scalability:
 1.  **Frontend Service:** Handles high-throughput gRPC connections, validation, and pushing to Redis. Scalable to N replicas.
 2.  **Matchmaker Worker:** Singleton background worker that processes the Redis queue and executes the matchmaking logic (Elo).
 
+* **Infrastructure Simulation:**
+  * Mocks a Game Server Orchestrator (like Agones).
+  * Simulates allocation latency and IP assignment for every match.

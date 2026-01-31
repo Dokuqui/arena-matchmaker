@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"arena-matchmaker/pkg/allocator"
 	"arena-matchmaker/pkg/metrics"
 	"context"
 	"fmt"
@@ -16,13 +17,15 @@ type Matchmaker struct {
 	rdb        *redis.Client
 	interval   time.Duration
 	maxMMRDiff int
+	allocator  allocator.Allocator
 }
 
-func NewMatchmaker(rdb *redis.Client, interval time.Duration, maxDiff int) *Matchmaker {
+func NewMatchmaker(rdb *redis.Client, interval time.Duration, maxDiff int, alloc allocator.Allocator) *Matchmaker {
 	return &Matchmaker{
 		rdb:        rdb,
 		interval:   interval,
 		maxMMRDiff: maxDiff,
+		allocator:  alloc,
 	}
 }
 
@@ -79,9 +82,17 @@ func (m *Matchmaker) findMatch(ctx context.Context) {
 		return
 	}
 
+	matchID := fmt.Sprintf("Match_%d", time.Now().Unix())
+
+	serverIP, err := m.allocator.Allocate(ctx, matchID)
+	if err != nil {
+		log.Printf("❌ Failed to allocate server: %v", err)
+		// In a real system, we would re-queue the players here!
+		return
+	}
+
 	metrics.MatchesMade.Inc()
 
-	matchID := fmt.Sprintf("Match_%d", time.Now().Unix())
-	fmt.Printf("MATCH CREATED! [%s] vs [%s] (Diff: %.0f) -> ID: %s\n",
-		p1.Member, p2.Member, mmrDiff, matchID)
+	fmt.Printf("✅ MATCH READY! [%s] vs [%s] (Diff: %.0f)\n   -> ID: %s\n   -> Server: %s\n",
+		p1.Member, p2.Member, mmrDiff, matchID, serverIP)
 }

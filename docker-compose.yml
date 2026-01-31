@@ -2,6 +2,7 @@ services:
   frontend:
     build: .
     container_name: arena_frontend
+    restart: always
     command: ./frontend
     ports:
       - "50051:50051"
@@ -16,6 +17,7 @@ services:
   matchmaker:
     build: .
     container_name: arena_worker
+    restart: always
     command: ./matchmaker
     environment:
       - REDIS_ADDR=redis:6379
