@@ -26,8 +26,6 @@ const (
 // MatchmakerServiceClient is the client API for MatchmakerService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// The Service definition
 type MatchmakerServiceClient interface {
 	FindMatch(ctx context.Context, in *FindMatchRequest, opts ...grpc.CallOption) (*FindMatchResponse, error)
 	ReportResult(ctx context.Context, in *ReportResultRequest, opts ...grpc.CallOption) (*ReportResultResponse, error)
@@ -64,8 +62,6 @@ func (c *matchmakerServiceClient) ReportResult(ctx context.Context, in *ReportRe
 // MatchmakerServiceServer is the server API for MatchmakerService service.
 // All implementations must embed UnimplementedMatchmakerServiceServer
 // for forward compatibility.
-//
-// The Service definition
 type MatchmakerServiceServer interface {
 	FindMatch(context.Context, *FindMatchRequest) (*FindMatchResponse, error)
 	ReportResult(context.Context, *ReportResultRequest) (*ReportResultResponse, error)

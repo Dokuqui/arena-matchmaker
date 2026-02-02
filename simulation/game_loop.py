@@ -1,38 +1,36 @@
 import grpc
 import time
-import random
 import matchmaker_pb2
 import matchmaker_pb2_grpc
 
-
-def run_game_loop():
-    channel = grpc.insecure_channel("localhost:50051")
+def run_party_loop():
+    channel = grpc.insecure_channel('localhost:50051')
     stub = matchmaker_pb2_grpc.MatchmakerServiceStub(channel)
 
-    p1 = "Warrior_01"
-    p2 = "Mage_88"
+    print("🎮 Queueing Team A (2 Solo Players)...")
+    stub.FindMatch(matchmaker_pb2.FindMatchRequest(
+        player_ids=["Warrior_01"], mmr=1200, region="EU"
+    ))
+    stub.FindMatch(matchmaker_pb2.FindMatchRequest(
+        player_ids=["Mage_88"], mmr=1210, region="EU"
+    ))
 
-    print(f"🎮 {p1} and {p2} queuing...")
-    stub.FindMatch(matchmaker_pb2.FindMatchRequest(player_id=p1, region="EU"))
-    stub.FindMatch(matchmaker_pb2.FindMatchRequest(player_id=p2, region="EU"))
+    print("🎮 Queueing Team B (Party of 2)...")
+    stub.FindMatch(matchmaker_pb2.FindMatchRequest(
+        player_ids=["Rogue_1", "Rogue_2"], mmr=1500, region="EU"
+    ))
 
-    print("⚔️  Match Found! Playing game... (Simulating 2s)")
-    time.sleep(2)
+    print("⏳ Waiting for Matchmaker to group them (4 players needed)...")
+    time.sleep(3)
 
-    winner, loser = (p1, p2) if random.random() > 0.5 else (p2, p1)
+    print("🏆 Match Over! Reporting Results...")
+    stub.ReportResult(matchmaker_pb2.ReportResultRequest(
+        match_id="match_123",
+        winner_ids=["Warrior_01", "Mage_88"],
+        loser_ids=["Rogue_1", "Rogue_2"]
+    ))
+    print("✅ Result Reported.")
 
-    print(f"🏆 Game Over! Winner: {winner}")
-
-    resp = stub.ReportResult(
-        matchmaker_pb2.ReportResultRequest(
-            match_id="match_123", winner_id=winner, loser_id=loser
-        )
-    )
-
-    print("📈 MMR Update:")
-    print(f"   {winner}: {resp.winner_new_mmr} (+)")
-    print(f"   {loser}: {resp.loser_new_mmr} (-)")
-
-
-if __name__ == "__main__":
-    run_game_loop()
+if __name__ == '__main__':
+    run_party_loop()
+    

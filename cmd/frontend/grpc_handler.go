@@ -6,6 +6,7 @@ import (
 	"arena-matchmaker/pkg/queue"
 	"context"
 	"fmt"
+	"time"
 )
 
 type GrpcServer struct {
@@ -14,53 +15,45 @@ type GrpcServer struct {
 }
 
 func (s *GrpcServer) FindMatch(ctx context.Context, req *matchmaker.FindMatchRequest) (*matchmaker.FindMatchResponse, error) {
-	realMMR, err := s.QueueClient.GetPlayerMMR(ctx, req.PlayerId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch player profile: %v", err)
+	if len(req.PlayerIds) == 0 {
+		return nil, fmt.Errorf("player list cannot be empty")
 	}
 
-	fmt.Printf("Received Match Request | Player: %s | MMR: %d\n", req.PlayerId, realMMR)
+	ticketID := fmt.Sprintf("ticket_%s_%d", req.PlayerIds[0], time.Now().UnixNano())
 
-	err = s.QueueClient.AddToQueue(ctx, req.PlayerId, int32(realMMR))
+	fmt.Printf("📥 Queue Request | Ticket: %s | Party Size: %d | MMR: %d\n",
+		ticketID, len(req.PlayerIds), req.Mmr)
+
+	err := s.QueueClient.AddToQueue(ctx, ticketID, req.PlayerIds, int(req.Mmr))
 	if err != nil {
 		return nil, fmt.Errorf("internal redis error: %v", err)
 	}
 
-	fakeTicketID := fmt.Sprintf("ticket_%s", req.PlayerId)
-	return &matchmaker.FindMatchResponse{
-		TicketId: fakeTicketID,
-	}, nil
+	return &matchmaker.FindMatchResponse{TicketId: ticketID}, nil
 }
 
 func (s *GrpcServer) ReportResult(ctx context.Context, req *matchmaker.ReportResultRequest) (*matchmaker.ReportResultResponse, error) {
-	fmt.Printf("Reporting Result | Match: %s | Winner: %s | Loser: %s\n",
-		req.MatchId, req.WinnerId, req.LoserId)
+	fmt.Printf("📝 Reporting Result | Match: %s | Winners: %v | Losers: %v\n",
+		req.MatchId, req.WinnerIds, req.LoserIds)
 
-	winnerMMR, err := s.QueueClient.GetPlayerMMR(ctx, req.WinnerId)
-	if err != nil {
-		return nil, err
+	for i := range req.WinnerIds {
+		if i >= len(req.LoserIds) {
+			break
+		}
+
+		wID := req.WinnerIds[i]
+		lID := req.LoserIds[i]
+
+		wMMR, _ := s.QueueClient.GetPlayerMMR(ctx, wID)
+		lMMR, _ := s.QueueClient.GetPlayerMMR(ctx, lID)
+
+		nw, nl := logic.CalculateElo(int32(wMMR), int32(lMMR))
+
+		_ = s.QueueClient.SetPlayerMMR(ctx, wID, int(nw))
+		_ = s.QueueClient.SetPlayerMMR(ctx, lID, int(nl))
+
+		fmt.Printf("   Update: %s (%d->%d) vs %s (%d->%d)\n", wID, wMMR, nw, lID, lMMR, nl)
 	}
-	loserMMR, err := s.QueueClient.GetPlayerMMR(ctx, req.LoserId)
-	if err != nil {
-		return nil, err
-	}
 
-	newWinnerMMR, newLoserMMR := logic.CalculateElo(int32(winnerMMR), int32(loserMMR))
-
-	err = s.QueueClient.SetPlayerMMR(ctx, req.WinnerId, int(newWinnerMMR))
-	if err != nil {
-		return nil, err
-	}
-	err = s.QueueClient.SetPlayerMMR(ctx, req.LoserId, int(newLoserMMR))
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("   Start: [%d vs %d] -> End: [%d vs %d]\n",
-		winnerMMR, loserMMR, newWinnerMMR, newLoserMMR)
-
-	return &matchmaker.ReportResultResponse{
-		WinnerNewMmr: newWinnerMMR,
-		LoserNewMmr:  newLoserMMR,
-	}, nil
+	return &matchmaker.ReportResultResponse{Success: true}, nil
 }

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10matchmaker.proto\x12\nmatchmaker\"B\n\x10\x46indMatchRequest\x12\x11\n\tplayer_id\x18\x01 \x01(\t\x12\x0b\n\x03mmr\x18\x02 \x01(\x05\x12\x0e\n\x06region\x18\x03 \x01(\t\"&\n\x11\x46indMatchResponse\x12\x11\n\tticket_id\x18\x01 \x01(\t\"L\n\x13ReportResultRequest\x12\x10\n\x08match_id\x18\x01 \x01(\t\x12\x11\n\twinner_id\x18\x02 \x01(\t\x12\x10\n\x08loser_id\x18\x03 \x01(\t\"E\n\x14ReportResultResponse\x12\x16\n\x0ewinner_new_mmr\x18\x01 \x01(\x05\x12\x15\n\rloser_new_mmr\x18\x02 \x01(\x05\x32\xb0\x01\n\x11MatchmakerService\x12H\n\tFindMatch\x12\x1c.matchmaker.FindMatchRequest\x1a\x1d.matchmaker.FindMatchResponse\x12Q\n\x0cReportResult\x12\x1f.matchmaker.ReportResultRequest\x1a .matchmaker.ReportResultResponseB\x10Z\x0egen/matchmakerb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10matchmaker.proto\x12\nmatchmaker\"C\n\x10\x46indMatchRequest\x12\x12\n\nplayer_ids\x18\x01 \x03(\t\x12\x0e\n\x06region\x18\x02 \x01(\t\x12\x0b\n\x03mmr\x18\x03 \x01(\x05\"&\n\x11\x46indMatchResponse\x12\x11\n\tticket_id\x18\x01 \x01(\t\"N\n\x13ReportResultRequest\x12\x10\n\x08match_id\x18\x01 \x01(\t\x12\x12\n\nwinner_ids\x18\x02 \x03(\t\x12\x11\n\tloser_ids\x18\x03 \x03(\t\"\'\n\x14ReportResultResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\xb0\x01\n\x11MatchmakerService\x12H\n\tFindMatch\x12\x1c.matchmaker.FindMatchRequest\x1a\x1d.matchmaker.FindMatchResponse\x12Q\n\x0cReportResult\x12\x1f.matchmaker.ReportResultRequest\x1a .matchmaker.ReportResultResponseB\x10Z\x0egen/matchmakerb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,13 +33,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\016gen/matchmaker'
   _globals['_FINDMATCHREQUEST']._serialized_start=32
-  _globals['_FINDMATCHREQUEST']._serialized_end=98
-  _globals['_FINDMATCHRESPONSE']._serialized_start=100
-  _globals['_FINDMATCHRESPONSE']._serialized_end=138
-  _globals['_REPORTRESULTREQUEST']._serialized_start=140
-  _globals['_REPORTRESULTREQUEST']._serialized_end=216
-  _globals['_REPORTRESULTRESPONSE']._serialized_start=218
-  _globals['_REPORTRESULTRESPONSE']._serialized_end=287
-  _globals['_MATCHMAKERSERVICE']._serialized_start=290
-  _globals['_MATCHMAKERSERVICE']._serialized_end=466
+  _globals['_FINDMATCHREQUEST']._serialized_end=99
+  _globals['_FINDMATCHRESPONSE']._serialized_start=101
+  _globals['_FINDMATCHRESPONSE']._serialized_end=139
+  _globals['_REPORTRESULTREQUEST']._serialized_start=141
+  _globals['_REPORTRESULTREQUEST']._serialized_end=219
+  _globals['_REPORTRESULTRESPONSE']._serialized_start=221
+  _globals['_REPORTRESULTRESPONSE']._serialized_end=260
+  _globals['_MATCHMAKERSERVICE']._serialized_start=263
+  _globals['_MATCHMAKERSERVICE']._serialized_end=439
 # @@protoc_insertion_point(module_scope)

@@ -26,8 +26,7 @@ if _version_not_supported:
 
 
 class MatchmakerServiceStub(object):
-    """The Service definition
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -48,8 +47,7 @@ class MatchmakerServiceStub(object):
 
 
 class MatchmakerServiceServicer(object):
-    """The Service definition
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def FindMatch(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -85,8 +83,7 @@ def add_MatchmakerServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class MatchmakerService(object):
-    """The Service definition
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def FindMatch(request,

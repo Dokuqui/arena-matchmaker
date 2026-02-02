@@ -21,12 +21,11 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// The Request: What the player sends
 type FindMatchRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	Mmr           int32                  `protobuf:"varint,2,opt,name=mmr,proto3" json:"mmr,omitempty"`      // Matchmaking Rating (ELO)
-	Region        string                 `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"` // e.g., "EU-WEST", "US-EAST"
+	PlayerIds     []string               `protobuf:"bytes,1,rep,name=player_ids,json=playerIds,proto3" json:"player_ids,omitempty"`
+	Region        string                 `protobuf:"bytes,2,opt,name=region,proto3" json:"region,omitempty"`
+	Mmr           int32                  `protobuf:"varint,3,opt,name=mmr,proto3" json:"mmr,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -61,9 +60,16 @@ func (*FindMatchRequest) Descriptor() ([]byte, []int) {
 	return file_proto_matchmaker_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *FindMatchRequest) GetPlayerId() string {
+func (x *FindMatchRequest) GetPlayerIds() []string {
 	if x != nil {
-		return x.PlayerId
+		return x.PlayerIds
+	}
+	return nil
+}
+
+func (x *FindMatchRequest) GetRegion() string {
+	if x != nil {
+		return x.Region
 	}
 	return ""
 }
@@ -75,17 +81,9 @@ func (x *FindMatchRequest) GetMmr() int32 {
 	return 0
 }
 
-func (x *FindMatchRequest) GetRegion() string {
-	if x != nil {
-		return x.Region
-	}
-	return ""
-}
-
-// The Response: What the server replies immediately
 type FindMatchResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TicketId      string                 `protobuf:"bytes,1,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"` // "Ticket" to track their queue status
+	TicketId      string                 `protobuf:"bytes,1,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -130,8 +128,8 @@ func (x *FindMatchResponse) GetTicketId() string {
 type ReportResultRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MatchId       string                 `protobuf:"bytes,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
-	WinnerId      string                 `protobuf:"bytes,2,opt,name=winner_id,json=winnerId,proto3" json:"winner_id,omitempty"` // The ID of the player who won
-	LoserId       string                 `protobuf:"bytes,3,opt,name=loser_id,json=loserId,proto3" json:"loser_id,omitempty"`    // The ID of the player who lost
+	WinnerIds     []string               `protobuf:"bytes,2,rep,name=winner_ids,json=winnerIds,proto3" json:"winner_ids,omitempty"`
+	LoserIds      []string               `protobuf:"bytes,3,rep,name=loser_ids,json=loserIds,proto3" json:"loser_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -173,24 +171,23 @@ func (x *ReportResultRequest) GetMatchId() string {
 	return ""
 }
 
-func (x *ReportResultRequest) GetWinnerId() string {
+func (x *ReportResultRequest) GetWinnerIds() []string {
 	if x != nil {
-		return x.WinnerId
+		return x.WinnerIds
 	}
-	return ""
+	return nil
 }
 
-func (x *ReportResultRequest) GetLoserId() string {
+func (x *ReportResultRequest) GetLoserIds() []string {
 	if x != nil {
-		return x.LoserId
+		return x.LoserIds
 	}
-	return ""
+	return nil
 }
 
 type ReportResultResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WinnerNewMmr  int32                  `protobuf:"varint,1,opt,name=winner_new_mmr,json=winnerNewMmr,proto3" json:"winner_new_mmr,omitempty"` // Return the updated skill rating
-	LoserNewMmr   int32                  `protobuf:"varint,2,opt,name=loser_new_mmr,json=loserNewMmr,proto3" json:"loser_new_mmr,omitempty"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -225,18 +222,11 @@ func (*ReportResultResponse) Descriptor() ([]byte, []int) {
 	return file_proto_matchmaker_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ReportResultResponse) GetWinnerNewMmr() int32 {
+func (x *ReportResultResponse) GetSuccess() bool {
 	if x != nil {
-		return x.WinnerNewMmr
+		return x.Success
 	}
-	return 0
-}
-
-func (x *ReportResultResponse) GetLoserNewMmr() int32 {
-	if x != nil {
-		return x.LoserNewMmr
-	}
-	return 0
+	return false
 }
 
 var File_proto_matchmaker_proto protoreflect.FileDescriptor
@@ -244,20 +234,21 @@ var File_proto_matchmaker_proto protoreflect.FileDescriptor
 const file_proto_matchmaker_proto_rawDesc = "" +
 	"\n" +
 	"\x16proto/matchmaker.proto\x12\n" +
-	"matchmaker\"Y\n" +
-	"\x10FindMatchRequest\x12\x1b\n" +
-	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x10\n" +
-	"\x03mmr\x18\x02 \x01(\x05R\x03mmr\x12\x16\n" +
-	"\x06region\x18\x03 \x01(\tR\x06region\"0\n" +
+	"matchmaker\"[\n" +
+	"\x10FindMatchRequest\x12\x1d\n" +
+	"\n" +
+	"player_ids\x18\x01 \x03(\tR\tplayerIds\x12\x16\n" +
+	"\x06region\x18\x02 \x01(\tR\x06region\x12\x10\n" +
+	"\x03mmr\x18\x03 \x01(\x05R\x03mmr\"0\n" +
 	"\x11FindMatchResponse\x12\x1b\n" +
-	"\tticket_id\x18\x01 \x01(\tR\bticketId\"h\n" +
+	"\tticket_id\x18\x01 \x01(\tR\bticketId\"l\n" +
 	"\x13ReportResultRequest\x12\x19\n" +
-	"\bmatch_id\x18\x01 \x01(\tR\amatchId\x12\x1b\n" +
-	"\twinner_id\x18\x02 \x01(\tR\bwinnerId\x12\x19\n" +
-	"\bloser_id\x18\x03 \x01(\tR\aloserId\"`\n" +
-	"\x14ReportResultResponse\x12$\n" +
-	"\x0ewinner_new_mmr\x18\x01 \x01(\x05R\fwinnerNewMmr\x12\"\n" +
-	"\rloser_new_mmr\x18\x02 \x01(\x05R\vloserNewMmr2\xb0\x01\n" +
+	"\bmatch_id\x18\x01 \x01(\tR\amatchId\x12\x1d\n" +
+	"\n" +
+	"winner_ids\x18\x02 \x03(\tR\twinnerIds\x12\x1b\n" +
+	"\tloser_ids\x18\x03 \x03(\tR\bloserIds\"0\n" +
+	"\x14ReportResultResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb0\x01\n" +
 	"\x11MatchmakerService\x12H\n" +
 	"\tFindMatch\x12\x1c.matchmaker.FindMatchRequest\x1a\x1d.matchmaker.FindMatchResponse\x12Q\n" +
 	"\fReportResult\x12\x1f.matchmaker.ReportResultRequest\x1a .matchmaker.ReportResultResponseB\x10Z\x0egen/matchmakerb\x06proto3"

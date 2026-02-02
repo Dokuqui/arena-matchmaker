@@ -14,28 +14,41 @@ type Client struct {
 
 func NewClient(addr string) (*Client, error) {
 	rdb := redis.NewClient(&redis.Options{Addr: addr})
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := rdb.Ping(ctx).Result()
-	if err != nil {
+	if _, err := rdb.Ping(ctx).Result(); err != nil {
 		return nil, fmt.Errorf("failed to connect to redis: %w", err)
 	}
-
 	return &Client{RDB: rdb}, nil
 }
 
-func (c *Client) AddToQueue(ctx context.Context, playerID string, mmr int32) error {
-	err := c.RDB.ZAdd(ctx, "matchmaker_queue", redis.Z{
-		Score:  float64(mmr),
-		Member: playerID,
-	}).Err()
+func (c *Client) AddToQueue(ctx context.Context, ticketID string, playerIDs []string, avgMMR int) error {
+	pipe := c.RDB.Pipeline()
 
-	if err != nil {
-		return fmt.Errorf("failed to add player to queue: %w", err)
+	membersStr := fmt.Sprintf("%v", playerIDs)
+
+	key := "ticket_data:" + ticketID
+	pipe.HSet(ctx, key, "size", len(playerIDs))
+	pipe.HSet(ctx, key, "members", membersStr)
+
+	pipe.ZAdd(ctx, "matchmaker_queue", redis.Z{
+		Score:  float64(avgMMR),
+		Member: ticketID,
+	})
+
+	if _, err := pipe.Exec(ctx); err != nil {
+		return fmt.Errorf("failed to queue ticket: %w", err)
 	}
 	return nil
+}
+
+func (c *Client) GetTicketSize(ctx context.Context, ticketID string) (int, error) {
+	val, err := c.RDB.HGet(ctx, "ticket_data:"+ticketID, "size").Int()
+	if err != nil {
+		return 0, err
+	}
+	return val, nil
 }
 
 func (c *Client) GetPlayerMMR(ctx context.Context, playerID string) (int, error) {
@@ -43,16 +56,9 @@ func (c *Client) GetPlayerMMR(ctx context.Context, playerID string) (int, error)
 	if err == redis.Nil {
 		return 1000, nil
 	}
-	if err != nil {
-		return 0, fmt.Errorf("failed to get mmr: %w", err)
-	}
-	return val, nil
+	return val, err
 }
 
 func (c *Client) SetPlayerMMR(ctx context.Context, playerID string, mmr int) error {
-	err := c.RDB.HSet(ctx, "player_ratings", playerID, mmr).Err()
-	if err != nil {
-		return fmt.Errorf("failed to set mmr: %w", err)
-	}
-	return nil
+	return c.RDB.HSet(ctx, "player_ratings", playerID, mmr).Err()
 }

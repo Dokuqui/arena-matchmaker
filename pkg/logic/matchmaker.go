@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const PlayersPerMatch = 2
+const PlayersPerMatch = 4
 
 type Matchmaker struct {
 	rdb        *redis.Client
@@ -32,13 +32,12 @@ func NewMatchmaker(rdb *redis.Client, interval time.Duration, maxDiff int, alloc
 func (m *Matchmaker) Run(ctx context.Context) {
 	ticker := time.NewTicker(m.interval)
 	defer ticker.Stop()
-
-	fmt.Println("Matchmaker Loop Started...")
+	fmt.Println("🔎 Matchmaker Loop Started (Party Mode: 2v2)...")
 
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Stopping Matchmaker...")
+			fmt.Println("🛑 Matchmaker Loop shutting down...")
 			return
 		case <-ticker.C:
 			m.findMatch(ctx)
@@ -50,49 +49,49 @@ func (m *Matchmaker) findMatch(ctx context.Context) {
 	count, _ := m.rdb.ZCard(ctx, "matchmaker_queue").Result()
 	metrics.PlayersInQueue.Set(float64(count))
 
-	players, err := m.rdb.ZRangeWithScores(ctx, "matchmaker_queue", 0, 1).Result()
-	if err != nil {
-		log.Printf("Error reading queue: %v", err)
+	tickets, err := m.rdb.ZRangeWithScores(ctx, "matchmaker_queue", 0, 9).Result()
+	if err != nil || len(tickets) < 1 {
 		return
 	}
 
-	if len(players) < PlayersPerMatch {
-		return
+	var matchTickets []string
+	currentSize := 0
+
+	for _, t := range tickets {
+		ticketID := t.Member.(string)
+
+		size, _ := m.rdb.HGet(ctx, "ticket_data:"+ticketID, "size").Int()
+
+		if currentSize+size <= PlayersPerMatch {
+			matchTickets = append(matchTickets, ticketID)
+			currentSize += size
+		}
+
+		if currentSize == PlayersPerMatch {
+			break
+		}
 	}
 
-	p1 := players[0]
-	p2 := players[1]
-
-	mmrDiff := p1.Score - p2.Score
-	if mmrDiff < 0 {
-		mmrDiff = -mmrDiff
-	}
-
-	if mmrDiff > float64(m.maxMMRDiff) {
+	if currentSize != PlayersPerMatch {
 		return
 	}
 
 	pipe := m.rdb.Pipeline()
-	pipe.ZRem(ctx, "matchmaker_queue", p1.Member)
-	pipe.ZRem(ctx, "matchmaker_queue", p2.Member)
-	_, err = pipe.Exec(ctx)
-
-	if err != nil {
-		log.Printf("Failed to remove players from queue: %v", err)
+	for _, tID := range matchTickets {
+		pipe.ZRem(ctx, "matchmaker_queue", tID)
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		log.Printf("Failed to dequeue: %v", err)
 		return
 	}
 
 	matchID := fmt.Sprintf("Match_%d", time.Now().Unix())
-
 	serverIP, err := m.allocator.Allocate(ctx, matchID)
 	if err != nil {
-		log.Printf("❌ Failed to allocate server: %v", err)
-		// In a real system, we would re-queue the players here!
+		log.Printf("Alloc failed: %v", err)
 		return
 	}
 
 	metrics.MatchesMade.Inc()
-
-	fmt.Printf("✅ MATCH READY! [%s] vs [%s] (Diff: %.0f)\n   -> ID: %s\n   -> Server: %s\n",
-		p1.Member, p2.Member, mmrDiff, matchID, serverIP)
+	fmt.Printf("✅ TEAM MATCH! Tickets: %v\n   -> ID: %s\n   -> Server: %s\n", matchTickets, matchID, serverIP)
 }
