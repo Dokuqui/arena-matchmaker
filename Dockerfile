@@ -13,7 +13,8 @@ WORKDIR /root/
 
 COPY --from=builder /app/frontend .
 COPY --from=builder /app/matchmaker .
+COPY --from=builder /app/web ./web
 
-EXPOSE 50051 2112
+EXPOSE 50051 2112 8080
 
 CMD ["./frontend"]

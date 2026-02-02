@@ -21,6 +21,9 @@ Designed to simulate a production-grade multiplayer backend, handling high-throu
 * **Infrastructure Simulation:**
   * Mocks a Game Server Orchestrator (like Agones).
   * Simulates cloud allocation latency and IP assignment for every match.
+* **Real-Time Dashboard:**
+  * "God Mode" web interface (WebSockets) to visualize queue depths and match events live.
+  * Auto-updating charts powered by Chart.js.
 
 ## 🏗 Architecture
 
@@ -70,7 +73,9 @@ python3 simulation/game_loop.py
 
 The system includes a built-in Prometheus metrics exporter to track real-time performance.
 
-* **Metrics Port:** `:2112`
+* **Real-Time Dashboard:** `http://localhost:8080` (Visuals)
+* **Prometheus UI:** `http://localhost:9090` (Query Database)
+* **Metrics Exporter:** `:2112` (Raw Data Source)
 * **Key Metrics:**
 * `arena_queue_depth`: Real-time count of players waiting (per region).
 * `arena_matches_total`: Cumulative counter of matches formed.
@@ -82,18 +87,6 @@ The system includes a built-in Prometheus metrics exporter to track real-time pe
 
   * Tracks player progression persistently across matches.
   * Handles post-match reporting and rating updates via gRPC.
-
-## 🏗 Architecture (Microservices)
-
-The system is split into independent services for scalability:
-
-1. **Frontend Service:** Handles high-throughput gRPC connections, validation, and pushing to Redis. Scalable to N replicas.
-
-2. **Matchmaker Worker:** Singleton background worker that processes the Redis queue and executes the matchmaking logic (Elo).
-
-* **Infrastructure Simulation:**
-  * Mocks a Game Server Orchestrator (like Agones).
-  * Simulates allocation latency and IP assignment for every match.
 
 ## ☁️ Cloud Deployment (Kubernetes)
 
@@ -115,3 +108,16 @@ kubectl apply -f k8s/
 
 * **Pipeline:** GitHub Actions (`.github/workflows/go.yml`)
 * **Tests:** Automated Unit Tests (`pkg/logic/elo_test.go`) run on every push to ensure algorithmic integrity.
+
+## 🖥️ Real-Time Dashboard ("God Mode")
+
+The project includes a built-in web dashboard to visualize the system state in real-time without refreshing.
+
+* **URL:** `http://localhost:8080`
+* **Tech Stack:** HTML5, Chart.js, WebSockets (Secure WSS support).
+* **Features:**
+  * **Live Queue Ticker:** Visualizes player backlog for EU/US regions instantly.
+  * **Event Stream:** scrolling terminal log of matches formed and servers allocated.
+  * **Backpressure Monitoring:** Watch the bars jump when workers are paused and drain when they resume.
+
+![Dashboard Preview](docs/dashboard_preview.png)

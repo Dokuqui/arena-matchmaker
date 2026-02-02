@@ -4,6 +4,8 @@ import (
 	"arena-matchmaker/gen/matchmaker"
 	"arena-matchmaker/pkg/config"
 	"arena-matchmaker/pkg/queue"
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -11,14 +13,61 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+type DashboardStats struct {
+	EUCount int64 `json:"eu_count"`
+	USCount int64 `json:"us_count"`
+}
+
+func startDashboardServer(q *queue.Client) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/index.html")
+	})
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Printf("WS Upgrade error: %v", err)
+			return
+		}
+		defer conn.Close()
+
+		for {
+			euCount, _ := q.RDB.ZCard(context.Background(), "queue:EU-WEST").Result()
+			usCount, _ := q.RDB.ZCard(context.Background(), "queue:US-EAST").Result()
+
+			stats := DashboardStats{
+				EUCount: euCount,
+				USCount: usCount,
+			}
+
+			msg, _ := json.Marshal(stats)
+			if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+				break
+			}
+
+			time.Sleep(500 * time.Millisecond)
+		}
+	})
+
+	fmt.Println("💻 Dashboard running on :8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Printf("Dashboard failed: %v", err)
+	}
+}
+
 func main() {
 	fmt.Println("Starting Arena Frontend (API)...")
-
 	cfg := config.Load()
 
 	fmt.Printf("🔌 Connecting to Redis at: %s\n", cfg.RedisAddr)
@@ -30,11 +79,10 @@ func main() {
 
 	go func() {
 		http.Handle("/metrics", promhttp.Handler())
-		fmt.Println("📊 Metrics listening on :2112")
-		if err := http.ListenAndServe(":2112", nil); err != nil {
-			log.Printf("Metrics server failed: %v", err)
-		}
+		http.ListenAndServe(":2112", nil)
 	}()
+
+	go startDashboardServer(qClient)
 
 	lis, err := net.Listen("tcp", cfg.GRPCPort)
 	if err != nil {
@@ -55,9 +103,7 @@ func main() {
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
-
 	<-stopChan
 	fmt.Println("\n⚠️  Shutting down Frontend...")
 	grpcServer.GracefulStop()
-	fmt.Println("✅ Frontend stopped.")
 }
