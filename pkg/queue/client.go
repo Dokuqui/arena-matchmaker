@@ -23,16 +23,19 @@ func NewClient(addr string) (*Client, error) {
 	return &Client{RDB: rdb}, nil
 }
 
-func (c *Client) AddToQueue(ctx context.Context, ticketID string, playerIDs []string, avgMMR int) error {
+func (c *Client) AddToQueue(ctx context.Context, ticketID string, playerIDs []string, avgMMR int, region string) error {
 	pipe := c.RDB.Pipeline()
 
 	membersStr := fmt.Sprintf("%v", playerIDs)
-
 	key := "ticket_data:" + ticketID
+
 	pipe.HSet(ctx, key, "size", len(playerIDs))
 	pipe.HSet(ctx, key, "members", membersStr)
+	pipe.HSet(ctx, key, "region", region)
 
-	pipe.ZAdd(ctx, "matchmaker_queue", redis.Z{
+	queueKey := fmt.Sprintf("queue:%s", region)
+
+	pipe.ZAdd(ctx, queueKey, redis.Z{
 		Score:  float64(avgMMR),
 		Member: ticketID,
 	})

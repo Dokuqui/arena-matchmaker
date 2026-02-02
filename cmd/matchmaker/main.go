@@ -25,9 +25,15 @@ func main() {
 	}
 	defer qClient.RDB.Close()
 
-	alloc := allocator.NewMockAllocator("EU-WEST-1")
+	region := os.Getenv("REGION")
+	if region == "" {
+		region = "EU-WEST"
+	}
+	fmt.Printf("🌍 Worker Starting for Region: %s\n", region)
 
-	mmLogic := logic.NewMatchmaker(qClient.RDB, cfg.TickRate, cfg.MaxMMRDiff, alloc)
+	alloc := allocator.NewMockAllocator(region)
+
+	mmLogic := logic.NewMatchmaker(qClient.RDB, cfg.TickRate, cfg.MaxMMRDiff, alloc, region)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go mmLogic.Run(ctx)

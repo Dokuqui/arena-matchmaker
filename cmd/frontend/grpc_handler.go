@@ -18,13 +18,17 @@ func (s *GrpcServer) FindMatch(ctx context.Context, req *matchmaker.FindMatchReq
 	if len(req.PlayerIds) == 0 {
 		return nil, fmt.Errorf("player list cannot be empty")
 	}
+	region := req.Region
+	if region == "" {
+		region = "EU-WEST"
+	}
 
 	ticketID := fmt.Sprintf("ticket_%s_%d", req.PlayerIds[0], time.Now().UnixNano())
 
-	fmt.Printf("📥 Queue Request | Ticket: %s | Party Size: %d | MMR: %d\n",
-		ticketID, len(req.PlayerIds), req.Mmr)
+	fmt.Printf("📥 Queue Request | Ticket: %s | Region: %s | MMR: %d\n",
+		ticketID, region, req.Mmr)
 
-	err := s.QueueClient.AddToQueue(ctx, ticketID, req.PlayerIds, int(req.Mmr))
+	err := s.QueueClient.AddToQueue(ctx, ticketID, req.PlayerIds, int(req.Mmr), region)
 	if err != nil {
 		return nil, fmt.Errorf("internal redis error: %v", err)
 	}

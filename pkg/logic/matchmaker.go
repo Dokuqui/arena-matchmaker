@@ -18,14 +18,16 @@ type Matchmaker struct {
 	interval   time.Duration
 	maxMMRDiff int
 	allocator  allocator.Allocator
+	queueName  string
 }
 
-func NewMatchmaker(rdb *redis.Client, interval time.Duration, maxDiff int, alloc allocator.Allocator) *Matchmaker {
+func NewMatchmaker(rdb *redis.Client, interval time.Duration, maxDiff int, alloc allocator.Allocator, region string) *Matchmaker {
 	return &Matchmaker{
 		rdb:        rdb,
 		interval:   interval,
 		maxMMRDiff: maxDiff,
 		allocator:  alloc,
+		queueName:  fmt.Sprintf("queue:%s", region),
 	}
 }
 
@@ -46,10 +48,10 @@ func (m *Matchmaker) Run(ctx context.Context) {
 }
 
 func (m *Matchmaker) findMatch(ctx context.Context) {
-	count, _ := m.rdb.ZCard(ctx, "matchmaker_queue").Result()
+	count, _ := m.rdb.ZCard(ctx, m.queueName).Result()
 	metrics.PlayersInQueue.Set(float64(count))
 
-	tickets, err := m.rdb.ZRangeWithScores(ctx, "matchmaker_queue", 0, 9).Result()
+	tickets, err := m.rdb.ZRangeWithScores(ctx, m.queueName, 0, 9).Result()
 	if err != nil || len(tickets) < 1 {
 		return
 	}
@@ -78,7 +80,7 @@ func (m *Matchmaker) findMatch(ctx context.Context) {
 
 	pipe := m.rdb.Pipeline()
 	for _, tID := range matchTickets {
-		pipe.ZRem(ctx, "matchmaker_queue", tID)
+		pipe.ZRem(ctx, m.queueName, tID)
 	}
 	if _, err := pipe.Exec(ctx); err != nil {
 		log.Printf("Failed to dequeue: %v", err)

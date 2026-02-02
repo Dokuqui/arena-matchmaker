@@ -14,13 +14,25 @@ services:
     # deploy:         # UNCOMMENT THIS TO SHOW OFF SCALING
     #   replicas: 2
 
-  matchmaker:
+  worker_eu:
     build: .
-    container_name: arena_worker
+    container_name: arena_worker_eu
     restart: always
     command: ./matchmaker
     environment:
       - REDIS_ADDR=redis:6379
+      - REGION=EU-WEST
+    depends_on:
+      - redis
+
+  worker_us:
+    build: .
+    container_name: arena_worker_us
+    restart: always
+    command: ./matchmaker
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REGION=US-EAST
     depends_on:
       - redis
 
