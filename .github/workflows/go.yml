@@ -1,0 +1,43 @@
+name: Go Build & Test
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        services:
+            redis:
+                image: redis:alpine
+                ports:
+                    - 6379:6379
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Set up Go
+              uses: actions/setup-go@v6
+              with:
+                  go-version: "1.25"
+
+            - name: Install Protoc
+              uses: arduino/setup-protoc@v3
+
+            - name: Install Go Plugins (Protobuf)
+              run: |
+                  go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+                  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+            - name: Generate Code
+              run: |
+                  protoc --go_out=. --go-grpc_out=. proto/matchmaker.proto
+
+            - name: Build
+              run: go build -v ./...
+
+            - name: Test
+              run: go test -v ./...
