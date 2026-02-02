@@ -1,0 +1,49 @@
+# --- WORKER EU ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-eu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-eu
+  template:
+    metadata:
+      labels:
+        app: worker-eu
+    spec:
+      containers:
+        - name: worker
+          image: arena-matchmaker-matchmaker:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_ADDR
+              value: "redis:6379"
+            - name: REGION
+              value: "EU-WEST"
+---
+# --- WORKER US ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-us
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-us
+  template:
+    metadata:
+      labels:
+        app: worker-us
+    spec:
+      containers:
+        - name: worker
+          image: arena-matchmaker-matchmaker:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_ADDR
+              value: "redis:6379"
+            - name: REGION
+              value: "US-EAST"
