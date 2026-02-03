@@ -2,6 +2,7 @@ package main
 
 import (
 	"arena-matchmaker/gen/matchmaker"
+	"arena-matchmaker/pkg/auth"
 	"arena-matchmaker/pkg/config"
 	"arena-matchmaker/pkg/queue"
 	"context"
@@ -89,7 +90,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(auth.AuthInterceptor),
+	)
 	matchmaker.RegisterMatchmakerServiceServer(grpcServer, &GrpcServer{
 		QueueClient: qClient,
 	})

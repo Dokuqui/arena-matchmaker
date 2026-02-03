@@ -13,10 +13,13 @@ CONCURRENCY = 20
 async def send_request(stub, region):
     p_id = f"User_{uuid.uuid4().hex[:8]}"
     mmr = random.randint(1000, 2000)
+    
+    metadata = (('authorization', 'Bearer bot-token-xyz'),)
 
     try:
         await stub.FindMatch(
-            matchmaker_pb2.FindMatchRequest(player_ids=[p_id], mmr=mmr, region=region)
+            matchmaker_pb2.FindMatchRequest(player_ids=[p_id], mmr=mmr, region=region),
+            metadata=metadata
         )
         return True
     except grpc.RpcError as e:

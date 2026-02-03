@@ -4,6 +4,7 @@ import matchmaker_pb2
 import matchmaker_pb2_grpc
 
 def run_region_test():
+    auth_header = [('authorization', 'Bearer my-secret-token-123')]
     channel = grpc.insecure_channel('localhost:50051')
     stub = matchmaker_pb2_grpc.MatchmakerServiceStub(channel)
 
@@ -14,24 +15,24 @@ def run_region_test():
         player_ids=["EU_Knight", "EU_Priest"], 
         mmr=1500, 
         region="EU-WEST"
-    ))
+    ), metadata=auth_header)
     stub.FindMatch(matchmaker_pb2.FindMatchRequest(
         player_ids=["EU_Mage", "EU_Archer"], 
         mmr=1520, 
         region="EU-WEST"
-    ))
+    ), metadata=auth_header)
 
     print("\n🇺🇸 [Client] Sending US-EAST Requests...")
     stub.FindMatch(matchmaker_pb2.FindMatchRequest(
         player_ids=["US_Marine", "US_Sniper"], 
         mmr=1200, 
         region="US-EAST"
-    ))
+    ), metadata=auth_header)
     stub.FindMatch(matchmaker_pb2.FindMatchRequest(
         player_ids=["US_Medic", "US_Pilot"], 
         mmr=1210, 
         region="US-EAST"
-    ))
+    ), metadata=auth_header)
 
     print("\n⏳ Waiting for Region Workers to process...")
     time.sleep(2) 
