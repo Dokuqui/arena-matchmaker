@@ -24,6 +24,9 @@ Designed to simulate a production-grade multiplayer backend, handling high-throu
 * **Real-Time Dashboard:**
   * "God Mode" web interface (WebSockets) to visualize queue depths and match events live.
   * Auto-updating charts powered by Chart.js.
+* **Security & Auth:**
+  * **JWT Authentication:** Secure gRPC Interceptor middleware rejects unauthorized requests.
+  * **Metadata Passing:** Clients pass tokens via gRPC headers (metadata).
 
 ## 🏗 Architecture
 
